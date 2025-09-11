@@ -63,7 +63,7 @@ Please choose parameters by [NeoLoopFinder](https://github.com/XiaoTaoWang/NeoLo
 
 ### MOGT framework
 
-![image](https://github.com/NBStarry/CGMega/blob/main/img/model_architecture.png)
+![image]()
 
 ---
 
