@@ -31,15 +31,12 @@ torch.cuda.set_device(4)
 
 def arg_parse():
     parser = argparse.ArgumentParser(description="Train MOGT arguments.")
-    parser.add_argument('-ch, "--change_hic', dest="change_hic_mat",
-                        help="change origin Hi-C matrix", action="store_true")
     parser.add_argument('-cv, "--cross_validation', dest="cv",
                         help="use cross validation", action="store_true")
     parser.add_argument('-d', "--down_sample", dest="ds", action="store_true")
     parser.add_argument('-g', "--gpu", dest="gpu", default=None)
     parser.add_argument('-l', "--load", dest="load", help="load data", action="store_true")
     parser.add_argument('-p', "--predict", dest='pred', help="predict all nodes", action="store_true")
-    parser.add_argument('-r', "--reverse", dest="reverse", action='store_true')
     parser.add_argument('-dis', "--disease", dest="disease", action='store_true')
     return parser.parse_args()
 
@@ -173,7 +170,7 @@ def train(model, fold, train_loader_list, valid_loader_list, optimizer, devices,
         steps = steps + 1
         optimizer.zero_grad()
         out,sim_matrix,KL_Loss = model(data)
-        # out = out[:size]
+        
         true_lab = data.y[:, 1].to(devices)
         out = out.view(-1)
         loss = loss_func(out, true_lab.float())
