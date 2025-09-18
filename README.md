@@ -1,7 +1,7 @@
 # mogt
 MOGT is a semi-supervised graph neural network that integrates the multi-omics data of genes and the topology information of biological networks.To construct the multi-omics representation graph, we represented genes as nodes and SNP-SNP interactions as edges. The node features were the multi-omics data of genes, including differential expression (DE), enhancer-promoter interactions (EPI) in patients and controls, and gene expression in five brain regions（Parietal Lobe, Frontal Lobe, Temporal Lobe, Cerebellum, and occipital Lobe）in adolescents and adults.
 
-![image](https://github.com/NBStarry/MOGT/tree/main/img/Framework.emf)
+![image](https://github.com/MOGT/tree/main/img/Framework.emf)
 
 ## Documentation
 MOGT documentation is available through [Documentation](https://sunyolo.github.io/MOGT.github.io/).
@@ -43,7 +43,7 @@ python main.py -cv -l  # Importing the relevant libraries may take a few minutes
 ## Tutorial
 This tutorial demonstrates how to use MOGT functions with a demo dataset (SCZ as an example). 
 Once you are familiar with MOGT’s workflow, please replace the demo data with your own data to begin your analysis. 
-[Tutorial notebook](https://github.com/NBStarry/MOGT/tree/main/Tutorial.ipynb) is available now.
+[Tutorial notebook](https://github.com/MOGT/tree/main/Tutorial.ipynb) is available now.
 
 ### How to prepare input data
 
@@ -51,8 +51,8 @@ We recommend getting started with MOGT using the provided demo dataset. When you
 
 Overall, the input data consists of two parts: the graph, constructed from SNP-SNP interaction and the node feature including DE, EPI, and gene expression in five brain regions（Parietal Lobe, Frontal Lobe, Temporal Lobe, Cerebellum, and Occipital Lobe）in adolescents and adults.
 
- If you are unfamiliar with MOGT, you may start with our data used in the paper to save your time. For SCZ, the input data as well as the label information are uploaded [here](https://github.com/NBStarry/MOGT/tree/main/data). If you start with this data, you can skip the _step 1_ about _How to prepare input data_.
- The following steps from 1.1~1.3 can be found in our source code [data_preprocess_cv.py](https://github.com/NBStarry/MOGT/blob/main/data_preprocess_cv.py).
+ If you are unfamiliar with MOGT, you may start with our data used in the paper to save your time. For SCZ, the input data as well as the label information are uploaded [here](https://github.com/MOGT/tree/main/data). If you start with this data, you can skip the _step 1_ about _How to prepare input data_.
+ The following steps from 1.1~1.3 can be found in our source code [data_preprocess_cv.py](https://github.com/MOGT/blob/main/data_preprocess_cv.py).
 
 >The labels should be collected yourself if you choose analyze your own data.
 
@@ -70,4 +70,4 @@ Overall, the input data consists of two parts: the graph, constructed from SNP-S
 ---
 
 ## Questions and Code Issues
-If you are having problems with our work, please use the [Github issue page](https://github.com/NBStarry/MOGT/issues).
+If you are having problems with our work, please use the [Github issue page](https://github.com/MOGT/issues).
