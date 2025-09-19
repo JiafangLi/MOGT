@@ -106,9 +106,8 @@ def calculate_metrics(y_true, y_pred, y_score):
     auc = roc_auc_score(y_true, y_score)
 
     fpr, tpr, thresholds = roc_curve(y_true, y_score)
-    # 计算约登指数
+    # Youden index
     j_scores = tpr + (1 - fpr) - 1
-    # 找到最大约登指数对应的阈值
     best_threshold = thresholds[np.argmax(j_scores)]
 
     return acc, cf_matrix, auprc, f1, auc,best_threshold

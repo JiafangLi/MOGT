@@ -20,8 +20,6 @@ EPS = 1e-8
 
 def arg_parse():
     parser = argparse.ArgumentParser(description="Data Preprocess.")
-    parser.add_argument('-j', '--joint', dest='joint', help="to package joint data", action="store_true")
-    parser.add_argument('-r', '--reverse', dest='reverse', help="to package reverse patient data", action="store_true")
     return parser.parse_args()
 
 
@@ -90,13 +88,7 @@ def get_snp_mat(disease="SCZ"):
 
 
 def get_label(disease="SCZ", reverse=False, slice=False):
-    """
-    Read label data, where some nodes have labels and others do not. For the nodes with labels, change the labels from -1 to 0.
-
-    Returns:
-    labels:         ndarray(num_nodes, 2). First col is 1 for negative nodes, and second col is 1 for positive nodes.
-    labeled_idx:    list(num_nodes). Indices of labeled nodes.
-    """
+ 
     label_dir = "data/"+ f"/{disease}/{disease}.csv"
     data = pd.read_csv(label_dir)
     data = data.loc[:,["gene_name","gene_id","label"]]
@@ -139,21 +131,7 @@ def get_random_edge(mat,edge_threshold):
     return x,y
 
 def construct_edge(mat,edge_threshold,random = True):
-    """
-    Construct edges from adjacent matrix.
-
-    Parameters:
-    ----------
-    mat:    ndarray(num_nodes, num_nodes).
-                PPI matrix from get_ppi_mat().
-
-    Returns:
-    edges:      list(num_edges, 2). 
-    edge_dim:   int.
-                Dim of edge features.
-    val:        list(num_edges, ).
-                Edge features(=[1] * num_edges in current version).
-    """
+    
     num_nodes = mat.shape[0]
     edges = []
     val = []
