@@ -5,53 +5,19 @@ from sklearn.metrics import  roc_curve, auc
 from matplotlib import pyplot as plt
 from sklearn import metrics
 from sklearn.metrics import matthews_corrcoef,roc_auc_score
-import tifffile as tiff
-
-def minmax(input, axis=1):
-    """
-    Do minmax normalization for input 2d-ndarray.
-
-    Parameters:
-    ----------
-    input:       np.ndarray.
-                The input 2d-ndarray.
-    axis:       int, default=1.
-                The axis should be normalized. Default is 1, that is do normalization along with the column.
-
-    Returns:
-    A ndarray after minmax normalization.
-    """
-    scaler = MinMaxScaler()
-    if axis == 1:
-        output = scaler.fit_transform(input)
-    elif axis == 0:
-        output = scaler.fit_transform(input.T).T
-    elif axis == -1:
-        output = (input - np.min(input)) / (np.max(input) - np.min(input))
-
-    return output
 
 
-def sum_norm(input, axis=1):
-    """
-    Do normalization for an input 2d-ndarray, making the sum of every row or column equals 1.
+def calculate_confidence_interval(scores):
+    mean = np.mean(scores)
+    std = np.std(scores)
+    n = len(scores)
+    z = 1.96  # 95% 置信水平的Z值
+    bound = (z * std / np.sqrt(n))
+    return bound
 
-    Parameters:
-    ----------
-    input:       ndarray.
-                The input 2d-ndarray.
-    axis:       int, default=1.
-                The axis should be normalized. Default is 1, that is do normalization along with the column.
-
-    Returns:
-    A ndarray after normalization.
-    """
-    axis_sum = input.sum(axis=1-axis, keepdims=True)
-    return input / axis_sum
 
 
 def get_gene_list(rename=False,disease = "SCZ"):
-    # gene_list = pd.read_csv("data/Gene-Name.txt")
     filename = "data/"+disease + "/" + disease + ".csv"
     gene_list = pd.read_csv(filename)
     gene_list = gene_list[["gene_name","gene_id"]]
@@ -59,7 +25,6 @@ def get_gene_list(rename=False,disease = "SCZ"):
 
 
 def drawROC(y_true,y_pric,disease):
-    # 绘制ROC曲线
     fpr, tpr, th = roc_curve(y_true, y_pric, pos_label=1)
     finalauc = auc(fpr, tpr)
     plt.figure()
@@ -76,14 +41,6 @@ def drawROC(y_true,y_pric,disease):
 
 
 def multi_diseases_roc(sampling_methods,disease,folds,colors, save=True, dpin=100):
-    """
-    Args:
-        names: list, 多个模型的名称
-        sampling_methods: list, 多个模型的实例化对象
-        save: 选择是否将结果保存（默认为png格式）
-    Returns:
-        返回图片对象plt
-    """
     aucs = []
     for (fold, y, colorname) in zip(folds,sampling_methods, colors):
         y_true = y["y_true"]
@@ -122,14 +79,6 @@ def caculateThreshold(y_true,y_pred):
 
 
 def multi_diseases_auprc(sampling_methods,diseases,  colors, save=True, dpin=100):
-    """
-    Args:
-        names: list, 多个模型的名称
-        sampling_methods: list, 多个模型的实例化对象
-        save: 选择是否将结果保存（默认为png格式）
-    Returns:
-        返回图片对象plt
-    """
     for (disease, y, colorname) in zip(diseases,sampling_methods, colors):
         y_true = y["y_true"]
         y_pred = y["y_score"]

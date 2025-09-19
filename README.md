@@ -1,10 +1,10 @@
-# mogt
+# MOGT
 MOGT is a semi-supervised graph neural network that integrates the multi-omics data of genes and the topology information of biological networks.To construct the multi-omics representation graph, we represented genes as nodes and SNP-SNP interactions as edges. The node features were the multi-omics data of genes, including differential expression (DE), enhancer-promoter interactions (EPI) in patients and controls, and gene expression in five brain regions（Parietal Lobe, Frontal Lobe, Temporal Lobe, Cerebellum, and occipital Lobe）in adolescents and adults.
 
 ![image](https://github.com/JiafangLi/MOGT/blob/main/img/Framework.png)
 
 ## Documentation
-MOGT documentation is available through [Documentation](https://sunyolo.github.io/MOGT.github.io/).
+MOGT documentation is available through [Documentation](https://github.com/JiafangLi/MOGT/blob/main/README.md).
 
 ## Conda Environment
 MOGT was written in Python 3.8, and should run on any OS that support pytorch and pyg. 
@@ -33,11 +33,11 @@ Install commmands of torch_scatter and torch_sparse should be adjusted according
 We recommend getting MOGT using Git from our Github repository through the following command:
 
 ```
-git clone 
+git clone https://github.com/JiafangLi/MOGT.git
 ```
 To verify a successful installation, just run:
 ```
-python main.py -cv -l  # Importing the relevant libraries may take a few minutes.
+python main.py -cv  # Importing the relevant libraries may take a few minutes.
 ```
 
 ## Tutorial
@@ -70,4 +70,4 @@ Overall, the input data consists of two parts: the graph, constructed from SNP-S
 ---
 
 ## Questions and Code Issues
-If you are having problems with our work, please use the [Github issue page](https://github.com/MOGT/issues).
+If you are having problems with our work, please use the [Github issue page](https://github.com/JiafangLi/MOGT/issues).

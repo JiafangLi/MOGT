@@ -13,8 +13,8 @@ from sklearn.metrics import confusion_matrix, average_precision_score, f1_score,
 
 import wandb
 
-import config_load
-from data_preprocess_cv import get_data, DiseaseDataset
+from config import config_load
+from data_preprocess_cv import get_data, DiseaseDataset,scale_data
 from model import *
 from utils import *
 
@@ -33,9 +33,7 @@ def arg_parse():
     parser = argparse.ArgumentParser(description="Train MOGT arguments.")
     parser.add_argument('-cv, "--cross_validation', dest="cv",
                         help="use cross validation", action="store_true")
-    parser.add_argument('-d', "--down_sample", dest="ds", action="store_true")
     parser.add_argument('-g', "--gpu", dest="gpu", default=None)
-    parser.add_argument('-l', "--load", dest="load", help="load data", action="store_true")
     parser.add_argument('-p', "--predict", dest='pred', help="predict all nodes", action="store_true")
     parser.add_argument('-dis', "--disease", dest="disease", action='store_true')
     return parser.parse_args()
@@ -61,7 +59,7 @@ def get_training_modules(params, dataset, pred=False):
     print("start load data")
     if pred:
         loader_list = NeighborLoader(data, num_neighbors=neighbors, batch_size=params['batch_size'], directed=False,
-                                input_nodes=data.train_mask[:, fold] + data.valid_mask[:, fold] + data.test_mask[:, fold], shuffle=True)
+                                input_nodes=data.train_mask[:, fold] + data.valid_mask[:, fold] + data.test_mask, shuffle=True)
         valid_loader_list, test_loader_list = None, None
     else:
         loader_list = NeighborLoader(data, num_neighbors=neighbors, batch_size=params['batch_size'], directed=False,
@@ -354,6 +352,44 @@ def train_model(modules, params, log_name, fold, head_info=False):
         wandb.finish()
     return best_auprc, vmax_auc, best_acc, best_f1, best_tp, model_dir,best_threshold
 
+def cv_train_model(args,configs):
+    disease = configs["disease"]
+    dataset = get_data(configs,disease = disease)
+    sum_auprc, sum_auc, sum_acc, sum_f1, sum_tp, train_result = [], [], [], [], [], []
+    CV_FOLDS = configs['cv_folds']
+    for i in range(CV_FOLDS):
+        head_info = True if i == 0 else False 
+        configs['fold'] = i
+        data = dataset
+        data = scale_data(data,i)
+        modules = get_training_modules(configs, data)
+        auprc, auc, acc, f1, tp, new_ckpt,cutoff = train_model(modules, configs, configs['log_name'], i, head_info,)
+        y_score, y_pred, y_true, y_index, genes = predict(modules['model'], modules['test_loader_list'], configs, new_ckpt)
+        acc, cf_matrix, auprc, f1, auc, test_cutoff = calculate_metrics(y_true, y_pred, y_score)
+        #save test result
+        y = pd.DataFrame({'y_true': y_true, 'y_score': y_score,"y_pred":y_pred,"cutoff":cutoff})
+        result = pd.concat([genes,y], axis=1)
+        result.to_csv(configs["out_dir"]+"/"+disease +"/"+disease+"_"+"test"+"_"+str(i)+".csv",index_label=False)
+
+        tp = cf_matrix[1, 1]
+        sum_auprc.append(auprc)
+        sum_auc.append(auc)
+        sum_acc.append(acc)
+        sum_f1.append(f1)
+        sum_tp.append(tp)
+        with open(configs['logfile'], 'a') as f:
+            print("Test AUPRC:{:.4f}, AUROC:{:.4f}, ACC:{:.4f}, F1:{:.4f}, TP:{:.1f},cutoff:{:.4f}"
+                .format(auprc, auc, acc, f1, tp,test_cutoff), file=f, flush=True)
+        train_result =  pred_to_df(i, train_result, y_index, y_true, y_score)
+    auc_ci = calculate_confidence_interval(sum_auc)
+    auprc_ci = calculate_confidence_interval(sum_auprc)
+    avg_auc = sum(sum_auc) / len(sum_auc)
+    avg_Auprc = sum(sum_auprc) / len(sum_auprc)
+    avg_fi = sum(sum_f1) / len(sum_f1)
+    with open(configs['logfile'], 'a') as f:
+        print(f"{CV_FOLDS}-folds AUPRC:{avg_Auprc:.4f}+{auprc_ci}, AUROC:{avg_auc:.4f}+{auc_ci}, F1:{avg_fi:.4f}",
+                file=f, flush=True)
+
 
 def predict(model, loader_list, params, ckpt, labeled=True):
     devices = params["device"]
@@ -410,7 +446,7 @@ def pred_to_df(i, result, y_index, y_true, y_score):
 
 
 
-def predict_all(configs,cutoff):
+def predict_all(args,configs,cutoff = 0.5):
     disease = configs["disease"]
     best = configs["best"]
     dataset = get_data(configs,disease=disease)
@@ -420,29 +456,17 @@ def predict_all(configs,cutoff):
     all_checkpoints = os.listdir(ckpt_path)
     checkpoints = [f for f in all_checkpoints if f.endswith('.pkl')]
     print(f"checkpoints:{checkpoints} " )
-    bestEvaluation = 0
-    checkpoint = []
-    if best:
-        for i  in range(len(checkpoints)):
-            item = checkpoints[i].split("_")
-            evaluation = float(item[-1][:-4])
-            if evaluation > bestEvaluation:
-                bestEvaluation = evaluation 
-                checkpoint = [checkpoints[i]]
     known_result, unknown_result = [], []
-    for i in range(num_folds):
-        configs["fold"] = i
-        modules = get_training_modules(configs, dataset, pred=True)
-        y_score, y_pred, y_true, y_index,_ = predict(modules['model'], modules['train_loader_list'],
-                                                    configs, ckpt_path + checkpoint[i])
-        known_result =  pred_to_df(i, known_result, y_index, y_true, y_score)
-        y_score, y_pred, y_true, y_index,_ = predict(modules['model'], modules['unknown_loader_list'],
-                                                    configs, ckpt_path + checkpoint[i], labeled=False)
-        unknown_result = pred_to_df(i, unknown_result, y_index, y_true, y_score)
-
+    configs["fold"] = 1
+    modules = get_training_modules(configs, dataset, pred=True)
+    y_score, y_pred, y_true, y_index,_ = predict(modules['model'], modules['train_loader_list'],
+                                                configs, ckpt_path + checkpoints[0])
+    known_result =  pred_to_df(0, known_result, y_index, y_true, y_score)
+    y_score, y_pred, y_true, y_index,_ = predict(modules['model'], modules['unknown_loader_list'],
+                                                configs, ckpt_path + checkpoints[0], labeled=False)
+    unknown_result = pred_to_df(0, unknown_result, y_index, y_true, y_score)
     score_col = [f"score_{i}" for i in range(num_folds)]
     known_result['avg_score'] = known_result[score_col].mean(axis=1)
-    print(cutoff)
     known_result['pred_label'] = known_result.apply(
         lambda x: 1 if x['avg_score'] > cutoff else 0, axis=1)
     unknown_result['avg_score'] = unknown_result[score_col].mean(axis=1)
@@ -455,13 +479,12 @@ def predict_all(configs,cutoff):
 
 def main(args, configs):
     if args.pred:
-        if args.disease is not None:
-            configs['hic'] = False
-            for disease in args.disease:
-                configs['data_dir'] = f'data/{disease}'
-                predict_all(args, configs)
-        else:
-            predict_all(args, configs)
+        predict_all(args, configs)
+    else:
+        configs['log_name'] = configs["disease"]
+        configs['logfile'] = os.path.join(configs["log_dir"], configs["log_name"] + ".txt")
+        cv_train_model(args, configs)
+        
 
 
 
@@ -470,8 +493,4 @@ if __name__ == "__main__":
     args = arg_parse()
     gpu = f"cuda:{args.gpu}" if args.gpu else 'cpu'
     configs["device"] = gpu
-    configs['load_data'] = args.load
-    configs['joint'] = args.joint
-    if args.reverse:
-        configs["reverse"] = True
     main(args, configs)

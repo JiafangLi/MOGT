@@ -13,7 +13,6 @@ from sklearn.manifold import TSNE, Isomap, LocallyLinearEmbedding
 from config import config_load
 from sklearn import preprocessing
 
-from utils import minmax
 import random
 from collections import Counter
 
