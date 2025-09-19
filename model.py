@@ -113,24 +113,6 @@ class MOGT(t.nn.Module):
 
 
 
-class MLP(t.nn.Module):
-    def __init__(self, drop_rate, input_dim, devices_available):
-        super(MLP, self).__init__()
-        self.devices_available = devices_available
-
-        self.lins = t.nn.ModuleList()
-        self.lins.append(
-            Linear(input_dim, HIDDEN_DIM, weight_initializer="kaiming_uniform").to(devices_available))
-        self.lins.append(
-            Linear(HIDDEN_DIM, 1, weight_initializer="kaiming_uniform").to(devices_available))
-
-    def forward(self, x):
-        x = x[0].to(self.devices_available)
-        x = self.lins[0](x)
-        x = F.leaky_relu(x, negative_slope=LEAKY_SLOPE, inplace=True)
-        x = self.lins[1](x)
-        return t.sigmoid(x)
-
 
 class FocalLoss(t.nn.Module):
     def __init__(self, alpha=0.25, gamma=2,logits=False, reduction=True):

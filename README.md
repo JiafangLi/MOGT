@@ -33,7 +33,7 @@ Install commmands of torch_scatter and torch_sparse should be adjusted according
 We recommend getting MOGT using Git from our Github repository through the following command:
 
 ```
-git clone https://github.com/JiafangLi/MOGT.git
+git clone https://github.com/biomed-AI/MOGT.git
 ```
 To verify a successful installation, just run:
 ```
@@ -65,7 +65,6 @@ Overall, the input data consists of two parts: the graph, constructed from SNP-S
 - warm-up strategy for learning rate is employed during the initial training phase.
 - To avoid overfitting and over-smoothing, we implemented an early stop strategy that would terminate training if the validation performance did not improve for 50 consecutive epochs.
 - To improve model robustness and reduce overfitting, the dropout rate was set to 0.4 for the modules.
-- Max pooling step size is 2. After pooling, the representation had 192 dimensions.
 
 ---
 
